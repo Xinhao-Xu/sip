@@ -1,0 +1,277 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include "Diag.h"
+#include "SIO.h"
+#include "db.h"
+//#include "Attach.h"
+
+
+DIAGINFO    g_diaginfo;
+
+int main(int argc,char *argv[])
+{
+	int i,res=99;
+
+	//handle argument '-v'
+	if( (argc==2)&&(!strcmp(argv[1],"-v")) )
+	{
+		show_verson();
+		exit(0);
+	}
+	//handle argument '-cplog'
+	if( (argc==2)&&(!strcmp(argv[1],"-cplog")) )
+	{
+		cp_logfiles3(argv[0]);
+		exit(0);
+	}
+
+// 	diag_main(argc,argv);
+
+// db_process();
+// 	db_export();
+// 	ftp_trans();
+
+
+	HIDDEN_CURSES();
+#if defined(__TEST_FUN__)
+
+	printf("Starting Test...\r\n");
+
+	get_argument(argc,argv);
+	//init_Dialog();
+	init_Diag();
+
+	res = fun_T01002001();
+	printf("fun_T01002001 res = %d \r\n", res);
+	res = fun_T01013005();
+	printf("fun_T01013005 res = %d \r\n", res);
+	res = fun_T01002001();
+	printf("fun_T01013006 res = %d \r\n", res);
+	res = fun_T01013006();
+	printf("fun_T01002001 res = %d \r\n", res);
+	res = fun_T01020001();
+	printf("fun_T01020001 res = %d \r\n", res);
+	res = fun_T01020002();
+	printf("fun_T01020002 res = %d \r\n", res);
+	res = fun_T01020003();
+	printf("fun_T01020003 res = %d \r\n", res);
+
+	res = fun_T01024001();
+	printf("fun_T01024001 res = %d \r\n", res);
+	res = fun_T01024002();
+	printf("fun_T01024002 res = %d \r\n", res);
+
+	res = fun_T02014001();
+	printf("fun_T02014001 res = %d \r\n", res);
+	res = fun_T01019001();
+	printf("fun_T01019001 res = %d \r\n", res);
+	
+
+	////////////////////////////////////////////////
+/*
+	res = fun_T01024001();
+	printf("\r\nfun_T01024001 res = %d\r\n\r\n", res);
+	res = fun_T01024002();
+
+	printf("\r\nfun_T01024002 res = %d\r\n\r\n", res);
+*/
+	//res = fun_T01020001();
+
+	//printf("\r\nfun_T01020001 res = %d\r\n\r\n",res);
+	
+	//res = fun_T01013005();
+	//printf("\r\nfun_T01013005 res = %d\r\n\r\n", res);
+
+	//res = fun_T01013006();
+	//printf("\r\nfun_T01013006 res = %d\r\n\r\n", res);
+
+	/*
+	res = fun_T01020002();
+
+	if (res)
+		printf("\r\n Fan2 tested FAIL (X). \r\n");
+	else
+		printf("\r\n Fan2 tested PASS (O). \r\n");
+		*/
+	//printf("\r\nfun_T01020002 res = %d\r\n\r\n",res);
+
+	//res = fun_T01020003();
+
+	//printf("\r\nfun_T01020003 res = %d\r\n\r\n",res);
+
+    //usb4, modify for db ver.
+	//aa = fun_T01012004();
+	//printf("aa = %d\r\n",aa);
+/*
+	system("ifconfig eth0 up > /dev/null 2>&1");
+	sleep(1);
+	system("ifconfig eth1 up > /dev/null 2>&1");
+	sleep(1);
+	system("ifconfig eth2 up > /dev/null 2>&1");
+	sleep(1);
+	system("ifconfig rename2 up > /dev/null 2>&1");
+	sleep(6);
+*/	
+
+/*
+	while(1)
+	{
+		sleep(1);
+		aa = fun_T01006001();
+		if(aa == 1)
+			printf("========== lan 1: fail!!! loop = %ld ==========\r\n",i);
+		aa = fun_T01006002();
+		if(aa == 1)
+			printf("========== lan 2: fail!!! loop = %ld ==========\r\n",i);
+		i++;
+	}
+
+*/
+
+	//db_process();
+	//db_export();
+	//ftp_trans();
+
+	//aa = rand_int(10000,99999);
+	//printf("aa = %ld\r\n",aa);
+
+
+
+	
+/*
+	printf("============================ start mac loop: ============================\r\n");
+	while(1)
+	{	//fun_T01006001();
+		//fun_T01006002();
+		usleep(30000);
+		output_MacAddrTable(g_diaginfo.szBarCode);
+		fResult_a = 0;
+		//output_FinRecord(g_diaginfo.szBarCode,fResult_a);
+	}
+*/
+//	//new dram test 2016.11.28
+	//res = fun_T01003001();
+	//printf("res = %d\r\n",res);
+
+/*	for test barcode function
+	while(1)
+	{
+		scanBarCode_RS232(0);
+		output_MacAddrTable(g_diaginfo.szBarCode);
+	}
+*/
+	//res = fun_T01013001();
+	//printf("T01013001 = %d\r\n",res);
+	//output_FinRecord(g_diaginfo.szBarCode,0);
+
+/*
+
+
+/*
+// com port test
+	res = fun_TestUART_003(0x2f8);
+	printf("uart_003_ttyS1=%d\r\n",res);
+
+	res = fun_TestUART_003(0x3e8);
+	printf("uart_003_ttyS2=%d\r\n",res);
+
+	res = fun_TestUART_003(0x2e8);
+	printf("uart_003_ttyS3=%d\r\n",res);
+
+	res = fun_TestUART_003(0x280);
+	printf("uart_003_ttyS4=%d\r\n",res);
+
+	res = fun_TestUART_003(0x288);
+	printf("uart_003_ttyS5=%d\r\n",res);
+*/
+//sio arg need, iopl?
+	//res = fun_T01022001();
+	//printf("T01022001=%d\r\n",res);
+
+//pcie 1x
+	//res = fun_T01019002();
+	//printf("T01019002=%d\r\n",res);
+
+/*
+//Port R 7 -> Port A 0
+	res = fun_T02017001();
+	printf("T02017001=%d\r\n",res);
+
+//secure RTC
+	res = fun_T02012001();
+	printf("T02012001=%d\r\n",res);
+//battery
+	res = fun_T02014001();
+	printf("T02014001=%d\r\n",res);
+
+DSEIT_INFO        eit_info;
+
+eit_info.u08_version = 0;
+eit_info.u32_subtarget = EIT_INFO_VERSION;
+res = EIT_CTLCODE(EIT_INFO, ACTION_GET, &eit_info);
+if(res != EIT_FUN_RES_SUCC)
+	printf("Eit error\r\n");
+else
+	printf("eit_version = 0x%X\r\n",eit_info.u08_version);
+*/
+/*
+	//SRAM
+	res = fun_T02006001();
+	printf("T02006001=%d\r\n",res);
+*/
+/*
+	printf("====================================\r\n");
+	//FAN1
+	res = fun_T01020001();
+	printf("T01020001=%d\r\n",res);
+	printf("====================================\r\n");
+	//FAN2
+	res = fun_T01020002();
+	printf("T01020002=%d\r\n",res);
+	printf("====================================\r\n");
+*/
+	//FAN3
+	//res = fun_T01020003();
+	//if(res == 0)
+	//	printf("FAN3 test pass\r\n");
+	//else
+	//	printf("FAN3 test fail\r\n");
+	//printf("====================================\r\n");
+
+
+	//FAN4
+	//res = fun_T01020004();
+	//printf("T01020004=%d\r\n",res);
+
+	//battery 1
+	//res = fun_T02014001();
+	//printf("T02014001=%d\r\n",res);
+
+	//res = 0;
+
+
+	//tcil_test(argc,argv);
+	deinit_Diag();
+	//deinit_Dialog();
+
+
+#else
+
+	//the main function for diag application
+	diag_main(argc,argv);
+
+#ifdef __SERVER_V1__
+	db_process();
+	db_export();
+	ftp_trans();
+
+#endif // __SERVER_V1__
+
+
+
+#endif
+	SHOW_CURSES();
+
+	return 0;
+}
+

@@ -1,0 +1,18 @@
+
+GLB7055		3800    
+
+Auto item
+000     T01002001  //Product            ID I5-4570TE
+001	T01013005	//COM5			
+002	T01013006	//COM6 
+003	T01020001	//Fan1 Only full speed
+004	T01020002	//Fan2
+005	T01020003	//Fan3		100%,50% duty  RPM //right C10
+006	T01024001	//HWaddr1
+007	T01024002	//HWaddr2
+008	T02014001	//Battery	
+009	T01019001	//PCIe 1x		detect GPC exist
+
+Manual item
+010	T01005001	//Audio		2 channels
+011	T01007001	//Display		3 output 

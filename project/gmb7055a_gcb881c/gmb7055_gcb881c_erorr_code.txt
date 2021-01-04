@@ -1,0 +1,66 @@
+gcb881c     3800
+
+Auto item
+000	T01002001  //Product       ID	 I5-4570TE
+001	T01003001  //DRAM	   8192MB
+002	T01015002  //SATA2
+003	T01006001  //LAN1
+004	T01006002  //LAN2 		
+005	T01012002  //USB2          CN14 UP
+006	T01012003  //USB3          J8 DOWN
+007	T01012004  //USB4          J9 DOWN
+008	T01013002  //COM2
+009	T01013003  //COM3			
+010	T01013004  //COM4 
+011	T01013005  //COM5			
+012	T01013006  //COM6
+013	T01020001  //FAN1		//CPU
+014	T01020003  //FAN3		//CN10
+015	T01020004  //FAN4		//CN2
+016	T02006001  //SRAM
+017	T02012001  //Secure RTC
+018	T02014001  //Battery Voltage1
+019	T01022001  //LPC SIO	   detecting SIO exist
+020	T01019001  //PCIe 1x	   detecting GPC exist
+021	T02017001  //Port A 0 -> Port C 7
+022	T02017002  //Port A 1 -> Port C 2 
+023	T02017003  //Port A 2 -> Port C 1
+024	T02017004  //Port A 3 -> Port C 0
+025	T02017005  //Port A 4 -> Port C 3
+026	T02017006  //Port A 5 -> Port C 4
+027	T02017007  //Port A 6 -> Port A 0
+028	T02017008  //Port A 7 -> Port A 1
+029	T02017009  //Port B 0 -> Port A 2
+030	T02017010  //Port B 1 -> Port A 3
+031	T02017011  //Port C 1 -> Port A 4
+032	T02017012  //Port B 2 -> Port A 5
+033	T02017013  //Port D 0 -> Port B 0
+034	T02017014  //Port D 2 -> Port B 1
+035	T02017015  //Port C 2 -> Port B 2
+036	T02017016  //Port B 5 -> Port B 3
+037	T02017017  //Port C 3 -> Port C 6
+038	T02017018  //Port C 4 -> Port B 5
+039	T02017019  //Port B 6 -> Port B 6
+040	T02017020  //Port B 7 -> Port B 7
+041	T02017021  //Port B 3 -> Port A 6
+042	T02017022  //Port D 1 -> Port A 7
+043	T02017023  //Port C 0 -> Port B 0
+044	T02017024  //Port B 4 -> Port B 1
+045	T02011725  //Port D 3 -> Port D 2
+046	T02017026  //ITR1 -> Port B 6
+047	T02017027  //ITR2 -> Port B 7
+048	T02017028  //ITR3 -> Port A 4
+049	T02017029  //ITR4 -> Port B 4
+050	T02017030  //ITR5 -> Port C 5
+051	T02017031  //GPC PCI Config table version check (v3)
+
+Manual item
+052	T01005001  //Audio		2 channels
+053	T01005002  //Audio		4 channels
+054	T01007001  //HDMI		internal
+055	T01020002  //Fan		
+056	T02022001  //LED		4x2 LED
+
+
+
+

@@ -1,0 +1,724 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "Result.h"
+#include <Debug.h>
+#include <string.h>
+#include "gpclib.h"
+#include "eitlib.h"
+#include "utils.h"
+#include "Diag.h"
+#include "time.h"
+
+#define	Pass	0
+#define	Fail	1
+#define	FIN_RECORD_PATH				RESULT_PATH
+#define	FIN_RECORD_FILE				FIN_RECORD_PATH "/FinRecord"
+#define UID_RECORD_FILE				OTHERREC_PATH "/UID_Record"
+
+DIAGINFO			g_diaginfo;
+
+/**********************************************************
+   keyword(barcode) search 2015.05.10
+**********************************************************/
+int Replaceword (int size, char *skeyword, char *reword, char *cfp, char *cnewfp)
+{
+    char ckw[size];
+    int kwlen=strlen(skeyword)+1;
+    //printf("kwlen= %d\n",kwlen);
+    int i=0;
+    FILE *fp=fopen(cfp,"r+");
+	//printf("keyword = %s\n",skeyword);
+    for(i=1; fgets(ckw,kwlen,fp)!=NULL; i++)
+    {	
+        //printf("i=%d\n",i);
+        if(strcmp(ckw,skeyword) == 0)
+        {
+            //printf("find_keyword=%s\n",ckw);
+			rewind(fp);
+			fclose(fp);
+			//printf("strcmp i = %d\n",i);
+			return i;
+        }
+        rewind(fp);
+        if(ckw[0]=='\n')				//jump a '\n' char, to next read pointer;
+            i++;
+        fseek(fp,i,SEEK_SET);
+    }
+	rewind(fp);
+    fclose(fp);
+	//printf("last i (if i=0) = %d\n",i);
+	return FUN_SUCC;
+}
+
+/**********************************************************
+	Print FinRecord  2015.05.06
+**********************************************************/
+/*
+int output_FinRecord(char *szBarCode, int fResult)
+{
+	char szFile[256];
+	char szBuf[512];
+	int i=0,j=0,snlen=0;						//i=original file pointer,j=szBarCode strlen;
+	FILE *file;
+	snlen=strlen(szBarCode); 
+	file = fopen(FIN_RECORD_FILE,"r+");
+	if(file == NULL)
+	{
+		DEBUGMSG("Creating new 'FinRecord' file\r\n");
+		file = fopen(FIN_RECORD_FILE,"w+");
+		fprintf(file,"     SN                   Summary    \r\n");
+		fprintf(file,"-------------------------------------\r\n");
+	}
+    if((i=Replaceword(20, szBarCode, NULL, FIN_RECORD_FILE, NULL)) >0)
+    {	
+		//printf("output i = %d\n",i);
+		//printf("Replace function -- szBarCode = %s\n",szBarCode);		
+        if(fResult == Pass);
+        {
+            fseek(file,(i+25),SEEK_SET);			//"i+x" depend on format
+            fprintf(file,"Pass");
+        }
+        if(fResult == Fail)
+        {
+            fseek(file,(i+25),SEEK_SET);
+            fprintf(file,"Fail");
+        }
+        fclose(file);
+    }
+	else
+	{
+		i=(18-snlen);							// 18 = limit of sn strlen
+		//printf("enter no match loop:\n");
+        if(fResult == Pass)
+        {
+            fseek(file,0,SEEK_END);
+            fprintf(file,"  %s",szBarCode);
+			for(j=0;(j<(26-snlen));j++)			// 26 = 18 + 8" "
+			{
+				fseek(file,0,SEEK_END);
+				fprintf(file," ");
+			}
+			fseek(file,0,SEEK_END);
+            fprintf(file,"Pass\r\n");
+			
+        }
+        if(fResult == Fail)
+        {
+            fseek(file,0,SEEK_END);
+            fprintf(file,"  %s",szBarCode);
+			for(j=0;(j<(26-snlen));j++)
+			{
+				fseek(file,0,SEEK_END);
+				fprintf(file," ");
+			}
+			fseek(file,0,SEEK_END);
+            fprintf(file,"Fail\r\n");
+        }
+        fclose(file);
+	}
+	return FUN_SUCC;
+}
+*/
+
+/**************************************************
+*OnBoard Storage test
+*step 1. find identifier
+*step 2. find device boot
+*step 3. find totally path
+*step 4. mount & r/w
+*step 5. remove test file
+**************************************************/
+char OnBoard_Storage01 (int size, char *skeyword, char *cfp)
+{
+    char ckw1[size];
+	char ckw2[7];
+	char *secKey = "dev/sd";
+	char ssbuf[4];
+	char szCMD[256];
+	char szCMD1[256];
+    int kwlen=strlen(skeyword)+1;
+	int i=0,j=0;
+    //printf("kwlen= %d\n",kwlen);
+
+	FILE *fp=fopen(cfp,"r+");
+	//printf("secKey = %s\n",secKey);
+    for(i=1; fgets(ckw1,kwlen,fp)!=NULL; i++)
+    {
+        //printf("i=%d\n",i);
+        if(strcmp(ckw1,skeyword) == 0)
+        {
+            //printf("find_1st keyword=%s\n",ckw1);
+			kwlen=strlen(secKey)+1;
+			//printf("kwlen=%d\n",kwlen);
+			// 2nd keyword start search
+            for(j=i; fgets(ckw2,kwlen,fp)!=NULL; j++)
+            {
+				//printf("j=%d\n",j);
+                if(strcmp(ckw2,secKey) == 0)
+                {
+                    //printf("find_2nd keyword=%s\n",ckw2);
+					//get corrcet dev
+                    fseek(fp,j+3,SEEK_SET);
+                    fgets(ssbuf,sizeof(ssbuf),fp);
+					//printf("ssbuf == %s\n",ssbuf);
+                    rewind(fp);
+                    fclose(fp);
+                    //printf("strcmp i = %d\n",i);
+					//prepare test
+					system("touch vf_sata3 2>&1");
+					//system("mv vf_sata3 /mnt/sipdevs/sdb1 2>&1");
+					sprintf(szCMD,"mv vf_sata3 /mnt/sipdevs/%s1 2>&1",ssbuf);
+					//printf("szCND=%s\n",szCMD);
+					system(szCMD);
+					
+					if(FUN_SUCC == fun_MountStorage_002("/mnt/sipdevs","vf_sata3"))
+					{
+						sprintf(szCMD1,"rm /mnt/sipdevs/%s1/vf_sata3 2>&1",ssbuf);
+						system(szCMD1);
+						//printf("szCMD1 = %s\n",szCMD1);
+						//system("rm /mnt/sipdevs/sdb1/vf_sata3");
+						return FUN_SUCC;
+					}
+					else
+					{	
+						sprintf(szCMD1,"rm /mnt/sipdevs/%s1/vf_sata3 2>&1",ssbuf);
+						//printf("szCMD1 = %s\n",szCMD1);
+						system(szCMD1);
+						return FUN_FAIL;
+					}
+                }
+				rewind(fp);
+				if(ckw2[0]=='\n')				//jump a '\n' char, to next read pointer;
+					j++;
+				fseek(fp,j,SEEK_SET);
+            }
+			return FUN_FAIL;
+		}
+		rewind(fp);
+        if(ckw1[0]=='\n')				//jump a '\n' char, to next read pointer;
+            i++;
+        fseek(fp,i,SEEK_SET);
+	}
+	rewind(fp);
+	fclose(fp);
+	return FUN_FAIL;
+}
+
+/**************************************************
+*OnBoard Storage test - mmcblk0
+*step 1. find identifier
+*step 2. find device boot
+*step 3. find totally path ensure device is correct
+**************************************************/
+char OnBoard_Storage02 (int size, char *skeyword, char *cfp)
+{
+    char ckw1[size];
+	char ckw2[7];
+	char *secKey = "mmc";
+	char ssbuf[8];
+	char szCMD[256];
+	char szCMD1[256];
+    int kwlen=strlen(skeyword)+1;
+	int i=0,j=0,cnt=0;
+
+    //printf("kwlen= %d\n",kwlen);
+	sleep(8); //for dos_i2c_timeout
+	FILE *fp=fopen(cfp,"r+");
+	//printf("secKey = %s\n",secKey);
+    for(i=1; fgets(ckw1,kwlen,fp)!=NULL; i++)
+    {
+       //printf("i=%d\n",i);
+        if(strcmp(ckw1,skeyword) == 0)
+        {
+            //printf("find_1st keyword=%s\n",ckw1);
+			kwlen=strlen(secKey)+1;
+			//printf("kwlen=%d\n",kwlen);
+			// 2nd keyword start search
+            for(j=i; fgets(ckw2,kwlen,fp)!=NULL; j++)
+            {
+				//printf("j=%d\n",j);
+                if(strcmp(ckw2,secKey) == 0)
+                {				
+                    //printf("find_2nd keyword=%s\n",ckw2);
+					//get corrcet dev
+					
+					//DK 20160129 add cid record
+					sprintf(szCMD,"cat /sys/block/mmcblk0/device/cid > /root/diag/gmb7735/record/other_rec/%s",g_diaginfo.szBarCode);
+					system(szCMD);
+				
+					fseek(fp,(j-1),SEEK_SET);
+                    fgets(ssbuf,sizeof(ssbuf),fp);
+					//printf("ssbuf == %s\n",ssbuf);
+                    rewind(fp);
+                    fclose(fp);
+                    //printf("strcmp i = %d\n",i);
+					return FUN_SUCC;
+				}	
+				rewind(fp);
+				if(ckw2[0]=='\n')				//jump a '\n' char, to next read pointer;
+					j++;
+				fseek(fp,j,SEEK_SET);
+				/*	
+					//prepare test
+					sprintf(szCMD,"mkfs -q -t ext4 /dev/%s 2>&1",ssbuf);
+					system(szCMD);
+					sleep(10);
+					//create mount point
+					sprintf(szCMD,"mkdir %s",ssbuf);
+					system(szCMD);
+					sprintf(szCMD,"mv %s /mnt/sipdevs/",ssbuf);
+					system(szCMD);
+					sprintf(szCMD,"mount /dev/%s /mnt/sipdevs/%s 2>&1",ssbuf,ssbuf);
+					system(szCMD);
+					//printf("szCMD=%s\n",szCMD);
+					system("touch vf_mmc1 2>&1");
+					sprintf(szCMD,"mv vf_mmc1 /mnt/sipdevs/%s 2>&1",ssbuf);
+					sleep(1);
+					system(szCMD);
+					sprintf(szCMD,"umount /dev/%s 2>&1",ssbuf);
+					system(szCMD);
+
+					//we verify file vf_mmc1 should not exist when umount device
+					if(FUN_FAIL == fun_MountStorage_002("/mnt/sipdevs","vf_mmc1"))
+					{
+						sprintf(szCMD1,"rm /mnt/sipdevs/%s/vf_mmc1 2>&1",ssbuf);
+						system(szCMD1);
+						//printf("szCMD1 = %s\n",szCMD1);
+						//system("rm /mnt/sipdevs/sdb1/vf_sata3");
+						return FUN_SUCC;
+					}
+					else
+					{	
+						sprintf(szCMD1,"rm /mnt/sipdevs/%s/vf_mmc1 2>&1",ssbuf);
+						//printf("szCMD1 = %s\n",szCMD1);
+						system(szCMD1);
+						return FUN_FAIL;
+					}
+                }
+				rewind(fp);
+				if(ckw2[0]=='\n')				//jump a '\n' char, to next read pointer;
+					j++;
+				fseek(fp,j,SEEK_SET);
+            */
+			}
+			//printf("2nd keyword fail\r\n");
+			return FUN_FAIL;
+		}
+		rewind(fp);
+        if(ckw1[0]=='\n')				//jump a '\n' char, to next read pointer;
+            i++;
+        fseek(fp,i,SEEK_SET);
+	}
+	rewind(fp);
+	fclose(fp);
+	return FUN_FAIL;
+}
+
+/**********************************************************
+   print UID_RECORD 2015.07.01
+**********************************************************/
+/*
+int output_UID_Record(char *szBarCode, PDSGPC_ROOTSECU_ENTRY plibrootsecu)
+{
+	char szFile[256];
+	char szBuf[512];
+	int i=0,j=0,k=0,snlen=0;						//i=original file pointer,j=szBarCode strlen;
+	FILE *file;
+	snlen=strlen(szBarCode); 
+	file = fopen(UID_RECORD_FILE,"r+");
+	if(file == NULL)
+	{
+		DEBUGMSG("Creating new 'UID reocrd' file\r\n");
+		file = fopen(UID_RECORD_FILE,"w+");
+		fprintf(file,"     SN                                   UID    \r\n");
+		fprintf(file,"-------------------------------------------------------------------------------\r\n");
+	}
+    if((i=Replaceword(20, szBarCode, NULL, UID_RECORD_FILE, NULL)) >0)
+    {	
+		//printf("output i = %d\n",i);
+		//printf("Replace function -- szBarCode = %s\n",szBarCode);		
+        fseek(file,(i+25),SEEK_SET);			//"i+x" depend on format
+        for(k=0;k<15;k++)
+		{
+			fprintf(file,"%X ",plibrootsecu->u08_uiddata[k]);
+			if(k==14)
+				fprintf(file,"\r\n");
+		}
+        fclose(file);
+    }
+	else
+	{
+		i=(18-snlen);							// 18 = limit of sn strlen
+		//printf("enter no match loop:\n");
+        fseek(file,0,SEEK_END);
+        fprintf(file,"  %s",szBarCode);
+		for(j=0;(j<(26-snlen));j++)			// 26 = 18 + 8" "
+		{
+			fseek(file,0,SEEK_END);
+			fprintf(file," ");
+		}
+		fseek(file,0,SEEK_END);
+		for(k=0;k<15;k++)
+		{
+			fprintf(file,"%X ",plibrootsecu->u08_uiddata[k]);
+			if(k==14)
+				fprintf(file,"\r\n");
+		}
+        fclose(file);
+	}
+	return FUN_SUCC;
+}
+*/
+
+/**********************************************************
+	get UID 2015.08.05
+**********************************************************/
+/*
+int fun_RootSecu_Read()
+{
+	int res=0,i=0,cunt=0;
+	unsigned char  rootsecu_uid[15];
+	unsigned int  compare_uid[15];
+	DSGPC_ROOTSECU_ENTRY librootsecu;
+	//PDSGPC_ROOTSECU_ENTRY plibrootsecu;
+	
+	memset(compare_uid, 0, 15*sizeof(unsigned int));
+	memset(rootsecu_uid, 0, 15*sizeof(unsigned char));
+	librootsecu.u32_subtarget = ROOTSECU_ENTRY_UID;
+	res = GPC_CTLCODE(GPC_CFG_ROOTSECU_ENTRY,ACTION_GET,&librootsecu);
+	if(res != GPC_FUN_RES_SUCC)
+	{
+		//printf("Error \r\n");
+		return FUN_FAIL;
+	}
+	//printf(" Unique ID = ");
+	//for(i=0;i<15;i++)
+		//printf(" %X ",librootsecu.u08_uiddata[i]);
+	for(i=0;i<15;i++)
+	{	
+		//printf("com_uid=%X ,rootuid=%x\r\n",compare_uid[i],librootsecu.u08_uiddata[i]);
+		if(compare_uid[i] == librootsecu.u08_uiddata[i])
+			cunt ++;
+	}
+	if(cunt == 15)
+	{
+		//printf("UID Burn Fail\r\n");
+		//printf("cunt == %d\r\n",cunt);
+		return RESULT_FAIL;
+	}
+	output_UID_Record(g_diaginfo.szBarCode,&librootsecu);
+	//printf("cunt == %d\r\n",cunt);
+	return RESULT_PASS;
+}
+
+*/
+/*****************************************************
+*copy "Record" folder to specify storage(external usb)
+*****************************************************/
+int cp_logfiles3(char *szProgPath)
+{
+	int i,res=RESULT_FAIL,j=0;
+	char szBuf[2048],szUSBDev[256],resolved_path[2048];
+	char *path_end;	
+	FILE *fp;
+
+	system("clear");
+	strcpy(resolved_path,szProgPath);
+	//resolved_path=strstr(resolved_path,"/");
+	path_end=strstr(resolved_path,"gl");
+	//printf("end=%s\r\n",path_end);
+	strcpy(resolved_path,path_end);
+	//printf("resolved_path=%s\r\n",resolved_path);
+	//path_end = strchr (resolved_path, '.');
+	//*path_end = '\0';
+	//printf("resolved_path=%s\r\n",resolved_path);
+	//mount all devices
+	mountAllStorage("sd","/mnt/sipdevs",11,0xFF);
+
+	fp = popen("mount","r");
+	if(fp!=NULL)
+	{
+		for(i=0;i<11;i++)
+		{
+			sprintf(szUSBDev,"sd%c1",'a'+i);
+			sprintf(szBuf,"/mnt/sipdevs/%s%s",szUSBDev,szProgPath);
+			//printf("1st:szBuf=%s,szUSBDev=%s,szProgPath=%s\r\n",szBuf,szUSBDev,szProgPath);
+			
+			sprintf(szBuf,"/mnt/sipdevs/%s/CPR.txt",szUSBDev);
+			if(!access(szBuf,F_OK)) //find file
+			{
+				j=1;
+				//printf("----find szBuf----\r\n");
+				break;
+			}	
+		}
+		if(j==1)
+		{
+			while(!feof(fp))
+			{
+				fgets(szBuf,2048,fp);
+				DEBUGMSG("line:%s    dev:%s\r\n",szBuf,szUSBDev);
+				//printf("2nd:szBuf=%s,szUSBDev=%s,szProgPath=%s\r\n",szBuf,szUSBDev,szProgPath);
+			}
+			if(strstr(szBuf,szUSBDev))	
+			{
+				//printf("strstr got,go copy\r\n");
+				//printf("resolved_path=%s,,,,szUSBDev=%s\r\n",resolved_path,szUSBDev);
+				sprintf(szBuf,"cp -r /root/diag/%s/record /mnt/sipdevs/%s > /dev/null 2>&1",resolved_path,szUSBDev);
+				printf("USB PATH = %s\r\n",szUSBDev);
+				system(szBuf);
+				printf("Start copy....please wait.......\r\n");
+				sleep(60);
+				printf("Done! please check your USB\r\n");
+			}
+		}
+		else
+			printf("Fail!!!\r\n");
+	}	
+	unmountAllStorage("sd","/mnt/sipdevs",11);
+	res=RESULT_PASS;
+	return res;
+}
+
+
+int fun_TestMemory_002(PMEM_TEST pInfo)
+{
+	DMIINFO	dmi_info;
+	int speed;
+	
+	get_dmiinfo(&dmi_info);
+
+	//printf("fun_TestMemory_002(),dmi_info.meminfo.size=%d,pInfo->size=%d\r\n",dmi_info.meminfo.size,pInfo->size);
+	//printf("\r\n meminfo = %d,\r\n meminfo2 = %d,\r\n pInfo = %d\r\n",dmi_info.meminfo.size,dmi_info.meminfo2.size,pInfo->size);
+	if(pInfo->locator==1)
+	{
+		//if(dmi_info.meminfo.size != pInfo->size)
+		//	return RESULT_FAIL;
+		if(dmi_info.meminfo.size < pInfo->size)
+			return RESULT_FAIL;
+	}
+	else if(pInfo->locator==2)
+	{
+		if(dmi_info.meminfo2.size != pInfo->size)
+			return RESULT_FAIL;
+	}
+	else if(pInfo->locator==0)
+	{
+		if(dmi_info.meminfo.size != pInfo->size)
+			return RESULT_FAIL;
+	}
+	return RESULT_PASS;
+}
+
+
+/**************************
+*  SRAM test 2015.10.28
+*  note:use BANK_SELECT
+**************************/
+
+/*
+#define VERIFY_VAL	0x55
+int fun_GPCTestSRAM_003(const int bank_num,const int ksize,const int bits)
+{
+	int i,j,k,res = FUN_SUCC;
+	U32			addr=0;
+	U08			buffer;
+	DSGPC_LIB_SETTING	libsetting;
+	DSGPC_SRAM	sram;
+
+	libsetting.u32_subtarget = GPC_LIB_INIT;
+	res = GPC_CTLCODE(GPC_LIB_SETTING,ACTION_SET,&libsetting);
+	if(res != GPC_FUN_RES_SUCC)
+		//printf("Please Check Device Driver \n");
+	
+	for(i=0;i<bank_num;i++)
+	{
+		sram.u32_subtarget = SRAM_BANK_SELECT;
+		sram.u08_bank = i;
+		res = GPC_CTLCODE(GPC_SRAM,ACTION_SET,&sram);
+		if(res != GPC_FUN_RES_SUCC)
+			//printf("Set SRAM Bank Error\n");		
+		
+		if(FUN_FAIL == FillSRAM(i,ksize,0))
+		{
+			res = FUN_FAIL;		
+			goto END;
+		}
+	}
+	//sleep(1);
+	for(i=0;i<bank_num;i++)  //bank switch
+	{
+		sram.u32_subtarget = SRAM_BANK_SELECT;
+		sram.u08_bank = i;
+		res = GPC_CTLCODE(GPC_SRAM,ACTION_SET,&sram);
+		if(res != GPC_FUN_RES_SUCC)
+			//printf("Set SRAM Bank Error\n");		
+		
+		for(k=0;k<bits;k++)
+		{
+			addr=1<<k;
+			buffer=VERIFY_VAL;
+			
+			sram.u32_subtarget = SRAM_BLOCK_RW;
+			sram.u32_address = addr;
+			sram.u32_size = 100;
+			sram.pu08_data = &buffer;
+			if(GPC_FUN_RES_SUCC != GPC_CTLCODE(GPC_SRAM,ACTION_SET,&sram))
+			{
+				res = FUN_FAIL;
+				goto END;
+			}
+			//sleep(1);
+			for(j=0;j<bits;j++)
+			{
+				if(j==k)
+					continue;
+				//Comparing VERIFY_VAL with others address;
+				buffer=0;
+				addr=1<<j;
+				sram.u32_subtarget = SRAM_BLOCK_RW;
+				sram.u32_address = addr;
+				sram.u32_size = 1;
+				sram.pu08_data = &buffer;
+				if(GPC_FUN_RES_SUCC != GPC_CTLCODE(GPC_SRAM,ACTION_GET,&sram))
+				{
+					res = FUN_FAIL;
+					goto END;
+				}
+				//printf("val=%02X...buffer=%02X\r\n",VERIFY_VAL,buffer);
+				if(VERIFY_VAL == buffer)
+				{
+					res = FUN_FAIL;
+					goto END;
+				}
+				//printf("enter verify %d\r\n",j);
+				//usleep(20000);
+				//recover data to 0
+				buffer=0;
+				addr=1<<k;
+				sram.u32_subtarget = SRAM_BLOCK_RW;
+				sram.u32_address = addr;
+				sram.u32_size = 1;
+				sram.pu08_data = &buffer;
+				if(GPC_FUN_RES_SUCC != GPC_CTLCODE(GPC_SRAM,ACTION_SET,&sram))
+				{
+					res = FUN_FAIL;
+					goto END;
+				}
+			}
+		}
+	}
+END:
+	return res;
+}
+*/
+
+
+/*****************************************************
+*for gmb7735 EIT3800ver temp use
+*****************************************************/
+/*
+void gpc_deinit()
+{
+	int res=0;
+
+	DSGPC_LIB_SETTING	 libsetting;
+
+	//deinitiate gpc library
+	libsetting.u32_subtarget = GPC_LIB_SETTING_DEINIT;
+	res = GPC_CTLCODE(GPC_LIB_SETTING,ACTION_SET,&libsetting);
+	//printf("res= %d\r\n",res);
+	//printf("deinit finish\r\n");
+	system("./uninstall");
+	usleep(300000);
+	
+	return 0;
+}
+*/
+
+/*****************************************************
+*for gmb7735 EIT3800ver temp use
+*****************************************************/
+/*
+void gpc_init()
+{
+	int res=0;
+
+	DSGPC_LIB_SETTING	 libsetting;
+
+	system("./install");
+	//initiate gpc library
+	libsetting.u32_subtarget = GPC_LIB_SETTING_INIT;
+	libsetting.u08_type = TYPE_GPC2010_GM;
+	libsetting.void_pDev = "/dev/gpcdrv"; 
+    res = GPC_CTLCODE(GPC_LIB_SETTING,ACTION_SET,&libsetting);
+	if(res != GPC_FUN_RES_SUCC)
+	{
+	  DEBUGMSG("GPC_LIB_SETTING_INIT = %d !!!\r\n", res);
+	}
+	
+	return 0;
+}
+
+*/
+
+/**************************************************
+*pci device detect - lspci 20160307
+**************************************************/
+char pci_detect01 (int size, char *skeyword, char *cfp)
+{
+    char ckw1[size];
+	char ckw2[7];
+	char *secKey = "3800";
+	char ssbuf[8];
+	char szCMD[256];
+	char szCMD1[256];
+    int kwlen=strlen(skeyword)+1;
+	int i=0,j=0,cnt=0;
+
+    //printf("kwlen= %d\n",kwlen);
+	FILE *fp=fopen(cfp,"r+");
+	//printf("secKey = %s\n",secKey);
+    for(i=1; fgets(ckw1,kwlen,fp)!=NULL; i++)
+    {
+       //printf("i=%d\n",i);
+        if(strcmp(ckw1,skeyword) == 0)
+        {
+            //printf("find_1st keyword=%s\n",ckw1);
+			kwlen=strlen(secKey)+1;
+			//printf("kwlen=%d\n",kwlen);
+			// 2nd keyword start search
+            for(j=i; fgets(ckw2,kwlen,fp)!=NULL; j++)
+            {
+				//printf("j=%d\n",j);
+                if(strcmp(ckw2,secKey) == 0)
+                {				
+                    //printf("find_2nd keyword=%s\n",ckw2);
+					fseek(fp,(j-1),SEEK_SET);
+                    fgets(ssbuf,sizeof(ssbuf),fp);
+					//printf("ssbuf == %s\n",ssbuf);
+                    rewind(fp);
+                    fclose(fp);
+                    //printf("strcmp i = %d\n",i);
+					return FUN_SUCC;
+				}	
+				rewind(fp);
+				if(ckw2[0]=='\n')				//jump a '\n' char, to next read pointer;
+					j++;
+				fseek(fp,j,SEEK_SET);
+			}
+			//printf("2nd keyword fail\r\n");
+			return FUN_FAIL;
+		}
+		rewind(fp);
+        if(ckw1[0]=='\n')				//jump a '\n' char, to next read pointer;
+            i++;
+        fseek(fp,i,SEEK_SET);
+	}
+	rewind(fp);
+	fclose(fp);
+	return FUN_FAIL;
+}
+
+
