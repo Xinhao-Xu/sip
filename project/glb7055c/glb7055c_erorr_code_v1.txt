@@ -1,0 +1,20 @@
+glb7055c     3800
+
+Auto item
+000	T01002001  //Product    
+001	T01003001  //DRAM	
+002	T01013005  //COM5 to COM4
+003	T01013006  //COM6 to COM3
+004	T01020001  //FAN1	
+005 T01024001  //Hwaddr 1
+006 T01024002  //Hwaddr 2
+007	T02014001  //Battery Voltage1
+
+
+Manual item
+008	T01005001  //Audio		3.5mm
+009	T01007001  //Screen		
+
+
+
+

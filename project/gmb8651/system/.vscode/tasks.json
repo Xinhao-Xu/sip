@@ -1,0 +1,45 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		
+		{
+            "type": "shell",
+            "label": "make",
+            "command": "make",
+            "args": [
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}"
+			],
+			"problemMatcher": [
+				"$gcc"
+			],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "make_test",
+            "command": "make",
+            "args": [
+                "test"
+			],
+			"problemMatcher": [
+				"$gcc"
+			],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "make_full",
+            "command": "make",
+            "args": [
+                "full"
+			],
+			"problemMatcher": [
+				"$gcc"
+			],
+            "group": "build"
+        },
+	]
+}
