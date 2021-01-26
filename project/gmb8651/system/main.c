@@ -45,21 +45,23 @@ int main(int argc,char *argv[])
 	init_Dialog();
 	init_Diag();
 
-	int a,b,c;
-	fan_tester(&a,&b,&c);
-	printf("\r\n");
-	if(!a)
-	printf("FAN1 fail\r\n");
-	else
-	printf("FAN1 success\r\n");
-	if(!b)
-	printf("FAN2 fail\r\n");
-	else
-	printf("FAN2 success\r\n");
-	if(!c)
-	printf("FAN3 fail\r\n");
-	else
-	printf("FAN3 success\r\n");
+	// int a,b,c;
+	// fan_tester(&a,&b,&c);
+	// printf("\r\n");
+	// if(!a)
+	// printf("FAN1 fail\r\n");
+	// else
+	// printf("FAN1 success\r\n");
+	// if(!b)
+	// printf("FAN2 fail\r\n");
+	// else
+	// printf("FAN2 success\r\n");
+	// if(!c)
+	// printf("FAN3 fail\r\n");
+	// else
+	// printf("FAN3 success\r\n");
+
+	res = fun_T01003001();
 
 
 	//diag_main(argc,argv);
@@ -164,13 +166,13 @@ int main(int argc,char *argv[])
 #else
 	//the main function for diag application	
 	//configure_share_irq();	//for gm6080
-	diag_main(argc,argv);
+	diag_main(argc,argv, 1);
 
-#if defined(__SERVER_V1__)
-		db_process();
-		db_export();
-		ftp_trans();	
-#endif
+// #if defined(__SERVER_V1__)
+// 		db_process();
+// 		db_export();
+// 		ftp_trans();	
+// #endif
 
 #endif
 	SHOW_CURSES();

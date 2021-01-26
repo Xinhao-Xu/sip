@@ -368,7 +368,14 @@ int fun_TestMemory_003(int  dram_size)
 	//printf("\r\ndram_size = %d\r\n",  dram_size);
 	//printf("\r\i = %d\r\n",  i);
 
-	if(dram_size >= 8192)
+	if (dram_size >= 16000)
+	{
+		if( (i < dram_size) && (i > (dram_size-3000)) )
+			return RESULT_PASS;
+		else
+			return RESULT_FAIL;
+	}
+	else if(dram_size >= 8192)
 	{
 		if( (i < dram_size) && (i > (dram_size-1300)) )
 			return RESULT_PASS;
